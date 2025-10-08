@@ -7,6 +7,31 @@ resource "aws_vpc" "main" {
   }
 }
 
+
+resource "aws_security_group" "ec2_sg" {
+  #This security group is for the EC2 instances
+  name = "${var.project_name}-ec2-sg"
+  description = "Security group for EC2 instances"
+  vpc_id = aws_vpc.main.id
+
+
+# ingress rule for ssh
+   ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+}
+
 # Create the Internet Gateway
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
@@ -49,22 +74,9 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# Create a NAT Gateway
-resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id # Place NAT in the first public subnet
-  tags = {
-    Name = "${var.project_name}-nat-gw"
-  }
-}
 
-# Create an Elastic IP for the NAT Gateway
-resource "aws_eip" "nat" {
-  domain = "vpc"
-  tags = {
-    Name = "${var.project_name}-nat-eip"
-  }
-}
+
+
 
 # Create a private route table
 resource "aws_route_table" "private" {
@@ -74,12 +86,7 @@ resource "aws_route_table" "private" {
   }
 }
 
-# Add a route for Internet traffic to the private route table via the NAT Gateway
-resource "aws_route" "private_nat_gateway" {
-  route_table_id         = aws_route_table.private.id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.main.id
-}
+
 
 # Create the private subnets
 resource "aws_subnet" "private" {
