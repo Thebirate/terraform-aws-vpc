@@ -22,3 +22,15 @@ variable "availability_zones" {
   description = "A list of Availability Zones to deploy subnets in."
   type        = list(string)
 }
+
+variable "enable_nat_gateway" {
+  description = "Enable NAT Gateway for private subnets to access the internet."
+  type        = bool
+  default     = false
+}
+
+variable "create_security_group" {
+  description = "Whether to create a default security group for EC2 instances."
+  type        = bool
+  default     = true
+}
